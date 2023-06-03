@@ -49,51 +49,50 @@ func (r *triggerResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 	}
 }
 
-type triggerResourceModel struct {
-	Name              types.String              `tfsdk:"name"`
-	Type              types.String              `tfsdk:"type"`
-	Id                types.String              `tfsdk:"id"`
-	Notes             types.String              `tfsdk:"notes"`
-	CustomEventFilter []*ResourceConditionModel `tfsdk:"custom_event_filter"`
+type resourceTriggerModel struct {
+	Name              types.String             `tfsdk:"name"`
+	Type              types.String             `tfsdk:"type"`
+	Id                types.String             `tfsdk:"id"`
+	Notes             types.String             `tfsdk:"notes"`
+	CustomEventFilter []resourceConditionModel `tfsdk:"custom_event_filter"`
 }
 
-func overwriteTriggerResource(trigger *tagmanager.Trigger, resource *triggerResourceModel) {
-	resource.Name = types.StringValue(trigger.Name)
-	resource.Type = types.StringValue(trigger.Type)
-	resource.Id = types.StringValue(trigger.TriggerId)
-	resource.Notes = nullableStringValue(trigger.Notes)
-	resource.CustomEventFilter = wrapCondition(trigger.CustomEventFilter)
+func toResourceTrigger(trigger *tagmanager.Trigger) *resourceTriggerModel {
+	return &resourceTriggerModel{
+		Name:              types.StringValue(trigger.Name),
+		Type:              types.StringValue(trigger.Type),
+		Id:                types.StringValue(trigger.TriggerId),
+		Notes:             nullableStringValue(trigger.Notes),
+		CustomEventFilter: toResourceCondition(trigger.CustomEventFilter),
+	}
 }
 
-func extractTrigger(resource triggerResourceModel) *tagmanager.Trigger {
-	customEventFilter := unwrapCondition(resource.CustomEventFilter)
+func toApiTrigger(resource resourceTriggerModel) *tagmanager.Trigger {
 	return &tagmanager.Trigger{
 		Name:              resource.Name.ValueString(),
 		Type:              resource.Type.ValueString(),
 		TriggerId:         resource.Id.ValueString(),
 		Notes:             resource.Notes.ValueString(),
-		CustomEventFilter: customEventFilter,
+		CustomEventFilter: toApiCondition(resource.CustomEventFilter),
 	}
 }
 
 // Create creates the resource and sets the initial Terraform state.
 func (r *triggerResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan triggerResourceModel
+	var plan resourceTriggerModel
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	trigger, err := r.client.CreateTrigger(extractTrigger(plan))
-
+	trigger, err := r.client.CreateTrigger(toApiTrigger(plan))
 	if err != nil {
 		resp.Diagnostics.AddError("Error Creating Trigger", err.Error())
 		return
 	}
 
-	overwriteTriggerResource(trigger, &plan)
-	diags = resp.State.Set(ctx, plan)
+	diags = resp.State.Set(ctx, toResourceTrigger(trigger))
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -102,7 +101,7 @@ func (r *triggerResource) Create(ctx context.Context, req resource.CreateRequest
 
 // Read refreshes the Terraform state with the latest data.
 func (r *triggerResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state triggerResourceModel
+	var state resourceTriggerModel
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -118,9 +117,7 @@ func (r *triggerResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	overwriteTriggerResource(trigger, &state)
-
-	diags = resp.State.Set(ctx, &state)
+	diags = resp.State.Set(ctx, toResourceTrigger(trigger))
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -129,7 +126,7 @@ func (r *triggerResource) Read(ctx context.Context, req resource.ReadRequest, re
 
 // Update updates the resource and sets the updated Terraform state on success.
 func (r *triggerResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan, state triggerResourceModel
+	var plan, state resourceTriggerModel
 
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
@@ -141,14 +138,13 @@ func (r *triggerResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
-	trigger, err := r.client.UpdateTrigger(state.Id.ValueString(), extractTrigger(plan))
+	trigger, err := r.client.UpdateTrigger(state.Id.ValueString(), toApiTrigger(plan))
 	if err != nil {
 		resp.Diagnostics.AddError("Error Updating Trigger", err.Error())
 		return
 	}
 
-	overwriteTriggerResource(trigger, &plan)
-	diags = resp.State.Set(ctx, plan)
+	diags = resp.State.Set(ctx, toResourceTrigger(trigger))
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -157,7 +153,7 @@ func (r *triggerResource) Update(ctx context.Context, req resource.UpdateRequest
 
 // Delete deletes the resource and removes the Terraform state on success.
 func (r *triggerResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state triggerResourceModel
+	var state resourceTriggerModel
 
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)

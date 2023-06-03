@@ -50,6 +50,8 @@ func NewClientInWorkspace(options *ClientInWorkspaceOptions) (*ClientInWorkspace
 	}
 }
 
+// Tag CRUD
+
 func (c *ClientInWorkspace) CreateTag(tag *tagmanager.Tag) (*tagmanager.Tag, error) {
 	return c.Client.CreateTag(c.Options.WorkspaceId, tag)
 }
@@ -70,6 +72,8 @@ func (c *ClientInWorkspace) DeleteTag(tagId string) error {
 	return c.Client.DeleteTag(c.Options.WorkspaceId, tagId)
 }
 
+// Variable CRUD
+
 func (c *ClientInWorkspace) CreateVariable(variable *tagmanager.Variable) (*tagmanager.Variable, error) {
 	return c.Client.CreateVariable(c.Options.WorkspaceId, variable)
 }
@@ -89,6 +93,8 @@ func (c *ClientInWorkspace) UpdateVariable(variableId string, variable *tagmanag
 func (c *ClientInWorkspace) DeleteVariable(variableId string) error {
 	return c.Client.DeleteVariable(c.Options.WorkspaceId, variableId)
 }
+
+// Trigger CRUD
 
 func (c *ClientInWorkspace) CreateTrigger(trigger *tagmanager.Trigger) (*tagmanager.Trigger, error) {
 	return c.Client.CreateTrigger(c.Options.WorkspaceId, trigger)

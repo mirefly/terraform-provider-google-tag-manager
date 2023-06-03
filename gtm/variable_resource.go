@@ -51,64 +51,67 @@ func (r *variableResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 	}
 }
 
-type variableResourceModel struct {
-	Name      types.String              `tfsdk:"name"`
-	Type      types.String              `tfsdk:"type"`
-	Id        types.String              `tfsdk:"id"`
-	Notes     types.String              `tfsdk:"notes"`
-	Parameter []*ResourceParameterModel `tfsdk:"parameter"`
+type resourceVariableModel struct {
+	Name      types.String             `tfsdk:"name"`
+	Type      types.String             `tfsdk:"type"`
+	Id        types.String             `tfsdk:"id"`
+	Notes     types.String             `tfsdk:"notes"`
+	Parameter []ResourceParameterModel `tfsdk:"parameter"`
 }
 
-func wrapVariable(variable *tagmanager.Variable) *variableResourceModel {
-	return &variableResourceModel{
+func (r resourceVariableModel) Equal(o resourceVariableModel) bool {
+	if !r.Name.Equal(o.Name) ||
+		!r.Type.Equal(o.Type) ||
+		!r.Id.Equal(o.Id) ||
+		!r.Notes.Equal(o.Notes) ||
+		len(r.Parameter) != len(o.Parameter) {
+		return false
+	}
+
+	for i := range r.Parameter {
+		if !r.Parameter[i].Equal(o.Parameter[i]) {
+			return false
+		}
+	}
+
+	return true
+}
+
+func toResourceVariable(variable *tagmanager.Variable) resourceVariableModel {
+	return resourceVariableModel{
 		Name:      types.StringValue(variable.Name),
 		Type:      types.StringValue(variable.Type),
 		Id:        types.StringValue(variable.VariableId),
-		Notes:     types.StringValue(variable.Notes),
-		Parameter: wrapParameter(variable.Parameter),
+		Notes:     nullableStringValue(variable.Notes),
+		Parameter: toResourceParameter(variable.Parameter),
 	}
 }
-
-func extractVariableParameter(resource variableResourceModel) []*tagmanager.Parameter {
-	var parameter []*tagmanager.Parameter
-	for _, p := range resource.Parameter {
-		parameter = append(parameter, &tagmanager.Parameter{
-			Key:   p.Key.ValueString(),
-			Type:  p.Type.ValueString(),
-			Value: p.Value.ValueString(),
-		})
-	}
-	return parameter
-}
-
-func unwrapVariable(resource variableResourceModel) *tagmanager.Variable {
-	parameter := extractVariableParameter(resource)
+func toApiVariable(resource resourceVariableModel) *tagmanager.Variable {
 	return &tagmanager.Variable{
 		Name:       resource.Name.ValueString(),
 		Type:       resource.Type.ValueString(),
 		VariableId: resource.Id.String(),
 		Notes:      resource.Notes.ValueString(),
-		Parameter:  parameter,
+		Parameter:  toApiParameter(resource.Parameter),
 	}
 }
 
 // Create creates the resource and sets the initial Terraform state.
 func (r *variableResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan variableResourceModel
+	var plan resourceVariableModel
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	variable, err := r.client.CreateVariable(unwrapVariable(plan))
-
+	variable, err := r.client.CreateVariable(toApiVariable(plan))
 	if err != nil {
 		resp.Diagnostics.AddError("Error Creating Variable", err.Error())
 		return
 	}
 
-	diags = resp.State.Set(ctx, wrapVariable(variable))
+	diags = resp.State.Set(ctx, toResourceVariable(variable))
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -117,7 +120,7 @@ func (r *variableResource) Create(ctx context.Context, req resource.CreateReques
 
 // Read refreshes the Terraform state with the latest data.
 func (r *variableResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state variableResourceModel
+	var state resourceVariableModel
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -133,7 +136,7 @@ func (r *variableResource) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
-	diags = resp.State.Set(ctx, wrapVariable(variable))
+	diags = resp.State.Set(ctx, toResourceVariable(variable))
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -142,7 +145,7 @@ func (r *variableResource) Read(ctx context.Context, req resource.ReadRequest, r
 
 // Update updates the resource and sets the updated Terraform state on success.
 func (r *variableResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan, state variableResourceModel
+	var plan, state resourceVariableModel
 
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
@@ -154,13 +157,13 @@ func (r *variableResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	variable, err := r.client.UpdateVariable(state.Id.ValueString(), unwrapVariable(plan))
+	variable, err := r.client.UpdateVariable(state.Id.ValueString(), toApiVariable(plan))
 	if err != nil {
 		resp.Diagnostics.AddError("Error Updating Variable", err.Error())
 		return
 	}
 
-	diags = resp.State.Set(ctx, wrapVariable(variable))
+	diags = resp.State.Set(ctx, toResourceVariable(variable))
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -169,7 +172,7 @@ func (r *variableResource) Update(ctx context.Context, req resource.UpdateReques
 
 // Delete deletes the resource and removes the Terraform state on success.
 func (r *variableResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state variableResourceModel
+	var state resourceVariableModel
 
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)

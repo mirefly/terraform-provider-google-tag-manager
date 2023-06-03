@@ -6,7 +6,8 @@ import (
 	"google.golang.org/api/tagmanager/v2"
 )
 
-var parameterSchema = genParameterSchema()
+var parameterSchema = buildParameterSchema()
+
 var conditionSchema = schema.ListNestedAttribute{
 	Optional: true,
 	NestedObject: schema.NestedAttributeObject{
@@ -32,7 +33,7 @@ func wrapParameterSchema(list schema.ListNestedAttribute) schema.ListNestedAttri
 	}
 }
 
-func genParameterSchema() schema.ListNestedAttribute {
+func buildParameterSchema() schema.ListNestedAttribute {
 	var s = schema.ListNestedAttribute{Optional: true, NestedObject: schema.NestedAttributeObject{}}
 
 	for i := 0; i < 5; i++ {
@@ -43,25 +44,49 @@ func genParameterSchema() schema.ListNestedAttribute {
 }
 
 type ResourceParameterModel struct {
-	Key   types.String              `tfsdk:"key"`
-	Type  types.String              `tfsdk:"type"`
-	Value types.String              `tfsdk:"value"`
-	List  []*ResourceParameterModel `tfsdk:"list"`
-	Map   []*ResourceParameterModel `tfsdk:"map"`
+	Key   types.String             `tfsdk:"key"`
+	Type  types.String             `tfsdk:"type"`
+	Value types.String             `tfsdk:"value"`
+	List  []ResourceParameterModel `tfsdk:"list"`
+	Map   []ResourceParameterModel `tfsdk:"map"`
 }
 
-func unwrapParameter(resourceParameter []*ResourceParameterModel) []*tagmanager.Parameter {
+func (r *ResourceParameterModel) Equal(o ResourceParameterModel) bool {
+	if !r.Key.Equal(o.Key) ||
+		!r.Type.Equal(o.Type) ||
+		!r.Value.Equal(o.Value) ||
+		len(r.List) != len(o.List) ||
+		len(r.Map) != len(o.Map) {
+		return false
+	}
+
+	for i := 0; i < len(r.List); i++ {
+		if !r.List[i].Equal(o.List[i]) {
+			return false
+		}
+	}
+
+	for i := 0; i < len(r.Map); i++ {
+		if !r.Map[i].Equal(o.Map[i]) {
+			return false
+		}
+	}
+
+	return true
+}
+
+func toApiParameter(resourceParameter []ResourceParameterModel) []*tagmanager.Parameter {
 	var parameter []*tagmanager.Parameter
 
 	for _, p := range resourceParameter {
 		var list, mmap []*tagmanager.Parameter
 
 		if p.List != nil {
-			list = unwrapParameter(p.List)
+			list = toApiParameter(p.List)
 		}
 
 		if p.Map != nil {
-			mmap = unwrapParameter(p.Map)
+			mmap = toApiParameter(p.Map)
 		}
 
 		parameter = append(parameter, &tagmanager.Parameter{
@@ -76,21 +101,21 @@ func unwrapParameter(resourceParameter []*ResourceParameterModel) []*tagmanager.
 	return parameter
 }
 
-func wrapParameter(parameter []*tagmanager.Parameter) []*ResourceParameterModel {
-	var resourceParameter []*ResourceParameterModel = make([]*ResourceParameterModel, len(parameter))
+func toResourceParameter(parameter []*tagmanager.Parameter) []ResourceParameterModel {
+	var resourceParameter []ResourceParameterModel = make([]ResourceParameterModel, len(parameter))
 
 	for i, p := range parameter {
-		var list, mmap []*ResourceParameterModel
+		var list, mmap []ResourceParameterModel
 
 		if p.List != nil {
-			list = wrapParameter(p.List)
+			list = toResourceParameter(p.List)
 		}
 
 		if p.Map != nil {
-			mmap = wrapParameter(p.Map)
+			mmap = toResourceParameter(p.Map)
 		}
 
-		resourceParameter[i] = &ResourceParameterModel{
+		resourceParameter[i] = ResourceParameterModel{
 			Key:   nullableStringValue(p.Key),
 			Type:  nullableStringValue(p.Type),
 			Value: nullableStringValue(p.Value),
@@ -110,18 +135,18 @@ func nullableStringValue(s string) types.String {
 	}
 }
 
-type ResourceConditionModel struct {
-	Type      types.String              `tfsdk:"type"`
-	Parameter []*ResourceParameterModel `tfsdk:"parameter"`
+type resourceConditionModel struct {
+	Type      types.String             `tfsdk:"type"`
+	Parameter []ResourceParameterModel `tfsdk:"parameter"`
 }
 
-func unwrapCondition(resourceCondition []*ResourceConditionModel) []*tagmanager.Condition {
+func toApiCondition(resourceCondition []resourceConditionModel) []*tagmanager.Condition {
 	condition := make([]*tagmanager.Condition, len(resourceCondition))
 
 	for i, rc := range resourceCondition {
 		var parameter []*tagmanager.Parameter
 		if rc.Parameter != nil {
-			parameter = unwrapParameter(rc.Parameter)
+			parameter = toApiParameter(rc.Parameter)
 		}
 
 		condition[i] = &tagmanager.Condition{
@@ -132,16 +157,16 @@ func unwrapCondition(resourceCondition []*ResourceConditionModel) []*tagmanager.
 	return condition
 }
 
-func wrapCondition(condition []*tagmanager.Condition) []*ResourceConditionModel {
-	resourceCondition := make([]*ResourceConditionModel, len(condition))
+func toResourceCondition(condition []*tagmanager.Condition) []resourceConditionModel {
+	resourceCondition := make([]resourceConditionModel, len(condition))
 
 	for i, c := range condition {
-		var resourceParameter []*ResourceParameterModel
+		var resourceParameter []ResourceParameterModel
 		if c.Parameter != nil {
-			resourceParameter = wrapParameter(c.Parameter)
+			resourceParameter = toResourceParameter(c.Parameter)
 		}
 
-		resourceCondition[i] = &ResourceConditionModel{
+		resourceCondition[i] = resourceConditionModel{
 			Type:      nullableStringValue(c.Type),
 			Parameter: resourceParameter,
 		}
@@ -150,7 +175,7 @@ func wrapCondition(condition []*tagmanager.Condition) []*ResourceConditionModel 
 	return resourceCondition
 }
 
-func wrapStringArray(list []string) []types.String {
+func toResourceStringArray(list []string) []types.String {
 	var rv []types.String
 
 	for _, v := range list {
