@@ -19,7 +19,7 @@ func NewWorkspaceResource() resource.Resource {
 }
 
 type workspaceResource struct {
-	client *api.Client
+	client *api.ClientInWorkspace
 }
 
 // Configure adds the provider configured client to the resource.
@@ -28,7 +28,7 @@ func (r *workspaceResource) Configure(_ context.Context, req resource.ConfigureR
 		return
 	}
 
-	r.client = req.ProviderData.(*api.Client)
+	r.client = req.ProviderData.(*api.ClientInWorkspace)
 }
 
 // Metadata returns the resource type name.

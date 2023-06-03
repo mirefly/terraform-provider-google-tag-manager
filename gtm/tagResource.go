@@ -19,7 +19,7 @@ func NewTagResource() resource.Resource {
 }
 
 type tagResource struct {
-	client *api.Client
+	client *api.ClientInWorkspace
 }
 
 // Configure adds the provider configured client to the resource.
@@ -28,7 +28,7 @@ func (r *tagResource) Configure(_ context.Context, req resource.ConfigureRequest
 		return
 	}
 
-	r.client = req.ProviderData.(*api.Client)
+	r.client = req.ProviderData.(*api.ClientInWorkspace)
 }
 
 // Metadata returns the resource type name.
@@ -40,12 +40,11 @@ func (r *tagResource) Metadata(_ context.Context, req resource.MetadataRequest, 
 func (r *tagResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"workspace_id": schema.StringAttribute{Required: true},
-			"name":         schema.StringAttribute{Required: true},
-			"type":         schema.StringAttribute{Required: true},
-			"id":           schema.StringAttribute{Computed: true},
-			"notes":        schema.StringAttribute{Optional: true},
-			"parameter":    parameterSchema,
+			"name":      schema.StringAttribute{Required: true},
+			"type":      schema.StringAttribute{Required: true},
+			"id":        schema.StringAttribute{Computed: true},
+			"notes":     schema.StringAttribute{Optional: true},
+			"parameter": parameterSchema,
 			"firing_trigger_id": schema.ListAttribute{
 				Optional:    true,
 				ElementType: types.StringType,
@@ -55,7 +54,6 @@ func (r *tagResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *
 }
 
 type tagResourceModel struct {
-	WorkspaceId     types.String              `tfsdk:"workspace_id"`
 	Name            types.String              `tfsdk:"name"`
 	Type            types.String              `tfsdk:"type"`
 	Id              types.String              `tfsdk:"id"`
@@ -65,7 +63,6 @@ type tagResourceModel struct {
 }
 
 func overwriteTagResource(tag *tagmanager.Tag, resource *tagResourceModel) {
-	resource.WorkspaceId = types.StringValue(tag.WorkspaceId)
 	resource.Name = types.StringValue(tag.Name)
 	resource.Type = types.StringValue(tag.Type)
 	resource.Id = types.StringValue(tag.TagId)
@@ -76,7 +73,6 @@ func overwriteTagResource(tag *tagmanager.Tag, resource *tagResourceModel) {
 
 func extractTag(resource tagResourceModel) *tagmanager.Tag {
 	return &tagmanager.Tag{
-		WorkspaceId:     resource.WorkspaceId.String(),
 		Name:            resource.Name.ValueString(),
 		Type:            resource.Type.ValueString(),
 		TagId:           resource.Id.String(),
@@ -95,7 +91,7 @@ func (r *tagResource) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	tag, err := r.client.CreateTag(plan.WorkspaceId.ValueString(), extractTag(plan))
+	tag, err := r.client.CreateTag(extractTag(plan))
 
 	if err != nil {
 		resp.Diagnostics.AddError("Error Creating Tag", err.Error())
@@ -119,7 +115,7 @@ func (r *tagResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 		return
 	}
 
-	tag, err := r.client.Tag(state.WorkspaceId.ValueString(), state.Id.ValueString())
+	tag, err := r.client.Tag(state.Id.ValueString())
 	if err == api.ErrNotExist {
 		resp.State.RemoveResource(ctx)
 		return
@@ -145,15 +141,12 @@ func (r *tagResource) Update(ctx context.Context, req resource.UpdateRequest, re
 
 	diags = req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
+
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	tag, err := r.client.UpdateTag(
-		state.WorkspaceId.ValueString(),
-		state.Id.ValueString(),
-		extractTag(plan),
-	)
+	tag, err := r.client.UpdateTag(state.Id.ValueString(), extractTag(plan))
 	if err != nil {
 		resp.Diagnostics.AddError("Error Updating Tag", err.Error())
 		return
@@ -170,13 +163,14 @@ func (r *tagResource) Update(ctx context.Context, req resource.UpdateRequest, re
 // Delete deletes the resource and removes the Terraform state on success.
 func (r *tagResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state tagResourceModel
+
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	err := r.client.DeleteTag(state.WorkspaceId.ValueString(), state.Id.ValueString())
+	err := r.client.DeleteTag(state.Id.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Error Deleting Tag", err.Error())
 		return

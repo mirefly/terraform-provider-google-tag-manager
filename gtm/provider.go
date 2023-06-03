@@ -38,6 +38,7 @@ func (p *gtmProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *
 			"credential_file":            schema.StringAttribute{Required: true},
 			"account_id":                 schema.StringAttribute{Required: true},
 			"container_id":               schema.StringAttribute{Required: true},
+			"workspace_name":             schema.StringAttribute{Required: true},
 			"max_api_queries_per_minute": schema.Int64Attribute{Optional: true},
 		},
 	}
@@ -47,6 +48,7 @@ type gtmProviderModel struct {
 	CredentialFile         types.String `tfsdk:"credential_file"`
 	AccountId              types.String `tfsdk:"account_id"`
 	ContainerId            types.String `tfsdk:"container_id"`
+	WorkspaceName          types.String `tfsdk:"workspace_name"`
 	MaxApiQueriesPerMinute types.Int64  `tfsdk:"max_api_queries_per_minute"`
 }
 
@@ -69,11 +71,14 @@ func (p *gtmProvider) Configure(ctx context.Context, req provider.ConfigureReque
 		waitingTimeBeforeEachQuery = time.Duration(int64(time.Minute) / maxApiQueriesPerMinute)
 	}
 
-	client, err := api.NewClient(&api.ClientOptions{
-		CredentialFile:             config.CredentialFile.ValueString(),
-		AccountId:                  config.AccountId.ValueString(),
-		ContainerId:                config.ContainerId.ValueString(),
-		WaitingTimeBeforeEachQuery: waitingTimeBeforeEachQuery,
+	client, err := api.NewClientInWorkspace(&api.ClientInWorkspaceOptions{
+		ClientOptions: &api.ClientOptions{
+			CredentialFile:             config.CredentialFile.ValueString(),
+			AccountId:                  config.AccountId.ValueString(),
+			ContainerId:                config.ContainerId.ValueString(),
+			WaitingTimeBeforeEachQuery: waitingTimeBeforeEachQuery,
+		},
+		WorkspaceName: config.WorkspaceName.ValueString(),
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("Unable to Create GTM Client", err.Error())

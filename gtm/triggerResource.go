@@ -19,7 +19,7 @@ func NewTriggerResource() resource.Resource {
 }
 
 type triggerResource struct {
-	client *api.Client
+	client *api.ClientInWorkspace
 }
 
 // Configure adds the provider configured client to the resource.
@@ -28,7 +28,7 @@ func (r *triggerResource) Configure(_ context.Context, req resource.ConfigureReq
 		return
 	}
 
-	r.client = req.ProviderData.(*api.Client)
+	r.client = req.ProviderData.(*api.ClientInWorkspace)
 }
 
 // Metadata returns the resource type name.
@@ -40,7 +40,6 @@ func (r *triggerResource) Metadata(_ context.Context, req resource.MetadataReque
 func (r *triggerResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"workspace_id":        schema.StringAttribute{Required: true},
 			"name":                schema.StringAttribute{Required: true},
 			"type":                schema.StringAttribute{Required: true},
 			"id":                  schema.StringAttribute{Computed: true},
@@ -51,7 +50,6 @@ func (r *triggerResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 }
 
 type triggerResourceModel struct {
-	WorkspaceId       types.String              `tfsdk:"workspace_id"`
 	Name              types.String              `tfsdk:"name"`
 	Type              types.String              `tfsdk:"type"`
 	Id                types.String              `tfsdk:"id"`
@@ -60,7 +58,6 @@ type triggerResourceModel struct {
 }
 
 func overwriteTriggerResource(trigger *tagmanager.Trigger, resource *triggerResourceModel) {
-	resource.WorkspaceId = types.StringValue(trigger.WorkspaceId)
 	resource.Name = types.StringValue(trigger.Name)
 	resource.Type = types.StringValue(trigger.Type)
 	resource.Id = types.StringValue(trigger.TriggerId)
@@ -71,7 +68,6 @@ func overwriteTriggerResource(trigger *tagmanager.Trigger, resource *triggerReso
 func extractTrigger(resource triggerResourceModel) *tagmanager.Trigger {
 	customEventFilter := unwrapCondition(resource.CustomEventFilter)
 	return &tagmanager.Trigger{
-		WorkspaceId:       resource.WorkspaceId.String(),
 		Name:              resource.Name.ValueString(),
 		Type:              resource.Type.ValueString(),
 		TriggerId:         resource.Id.ValueString(),
@@ -89,7 +85,7 @@ func (r *triggerResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	trigger, err := r.client.CreateTrigger(plan.WorkspaceId.ValueString(), extractTrigger(plan))
+	trigger, err := r.client.CreateTrigger(extractTrigger(plan))
 
 	if err != nil {
 		resp.Diagnostics.AddError("Error Creating Trigger", err.Error())
@@ -113,7 +109,7 @@ func (r *triggerResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	trigger, err := r.client.Trigger(state.WorkspaceId.ValueString(), state.Id.ValueString())
+	trigger, err := r.client.Trigger(state.Id.ValueString())
 	if err == api.ErrNotExist {
 		resp.State.RemoveResource(ctx)
 		return
@@ -139,15 +135,12 @@ func (r *triggerResource) Update(ctx context.Context, req resource.UpdateRequest
 
 	diags = req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
+
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	trigger, err := r.client.UpdateTrigger(
-		state.WorkspaceId.ValueString(),
-		state.Id.ValueString(),
-		extractTrigger(plan),
-	)
+	trigger, err := r.client.UpdateTrigger(state.Id.ValueString(), extractTrigger(plan))
 	if err != nil {
 		resp.Diagnostics.AddError("Error Updating Trigger", err.Error())
 		return
@@ -164,13 +157,14 @@ func (r *triggerResource) Update(ctx context.Context, req resource.UpdateRequest
 // Delete deletes the resource and removes the Terraform state on success.
 func (r *triggerResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state triggerResourceModel
+
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	err := r.client.DeleteTrigger(state.WorkspaceId.ValueString(), state.Id.ValueString())
+	err := r.client.DeleteTrigger(state.Id.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Error Deleting Trigger", err.Error())
 		return

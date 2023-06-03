@@ -8,13 +8,14 @@ import (
 	"google.golang.org/api/tagmanager/v2"
 )
 
+var testClientOptions = &ClientOptions{
+	CredentialFile: "./testdata/credentials-77b14e38b4dd.json",
+	AccountId:      "6105084028",
+	ContainerId:    "119458552",
+}
+
 func newTestClient(t *testing.T) *Client {
-	client, err := NewClient(
-		&ClientOptions{
-			CredentialFile: "./testdata/credentials-77b14e38b4dd.json",
-			AccountId:      "6105084028",
-			ContainerId:    "119458552",
-		})
+	client, err := NewClient(testClientOptions)
 
 	assert.Nil(t, err)
 	return client
