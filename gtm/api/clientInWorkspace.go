@@ -1,6 +1,8 @@
 package api
 
-import "google.golang.org/api/tagmanager/v2"
+import (
+	"google.golang.org/api/tagmanager/v2"
+)
 
 type ClientInWorkspaceOptions struct {
 	*ClientOptions
@@ -68,42 +70,42 @@ func (c *ClientInWorkspace) DeleteTag(tagId string) error {
 	return c.Client.DeleteTag(c.Options.WorkspaceId, tagId)
 }
 
-func (c *ClientInWorkspace) CreateVariable(tag *tagmanager.Variable) (*tagmanager.Variable, error) {
-	return c.Client.CreateVariable(c.Options.WorkspaceId, tag)
+func (c *ClientInWorkspace) CreateVariable(variable *tagmanager.Variable) (*tagmanager.Variable, error) {
+	return c.Client.CreateVariable(c.Options.WorkspaceId, variable)
 }
 
 func (c *ClientInWorkspace) ListVariables() ([]*tagmanager.Variable, error) {
 	return c.Client.ListVariables(c.Options.WorkspaceId)
 }
 
-func (c *ClientInWorkspace) Variable(tagId string) (*tagmanager.Variable, error) {
-	return c.Client.Variable(c.Options.WorkspaceId, tagId)
+func (c *ClientInWorkspace) Variable(variableId string) (*tagmanager.Variable, error) {
+	return c.Client.Variable(c.Options.WorkspaceId, variableId)
 }
 
-func (c *ClientInWorkspace) UpdateVariable(tagId string, tag *tagmanager.Variable) (*tagmanager.Variable, error) {
-	return c.Client.UpdateVariable(c.Options.WorkspaceId, tagId, tag)
+func (c *ClientInWorkspace) UpdateVariable(variableId string, variable *tagmanager.Variable) (*tagmanager.Variable, error) {
+	return c.Client.UpdateVariable(c.Options.WorkspaceId, variableId, variable)
 }
 
-func (c *ClientInWorkspace) DeleteVariable(tagId string) error {
-	return c.Client.DeleteVariable(c.Options.WorkspaceId, tagId)
+func (c *ClientInWorkspace) DeleteVariable(variableId string) error {
+	return c.Client.DeleteVariable(c.Options.WorkspaceId, variableId)
 }
 
-func (c *ClientInWorkspace) CreateTrigger(tag *tagmanager.Trigger) (*tagmanager.Trigger, error) {
-	return c.Client.CreateTrigger(c.Options.WorkspaceId, tag)
+func (c *ClientInWorkspace) CreateTrigger(trigger *tagmanager.Trigger) (*tagmanager.Trigger, error) {
+	return c.Client.CreateTrigger(c.Options.WorkspaceId, trigger)
 }
 
 func (c *ClientInWorkspace) ListTriggers() ([]*tagmanager.Trigger, error) {
 	return c.Client.ListTriggers(c.Options.WorkspaceId)
 }
 
-func (c *ClientInWorkspace) Trigger(tagId string) (*tagmanager.Trigger, error) {
-	return c.Client.Trigger(c.Options.WorkspaceId, tagId)
+func (c *ClientInWorkspace) Trigger(triggerId string) (*tagmanager.Trigger, error) {
+	return c.Client.Trigger(c.Options.WorkspaceId, triggerId)
 }
 
-func (c *ClientInWorkspace) UpdateTrigger(tagId string, tag *tagmanager.Trigger) (*tagmanager.Trigger, error) {
-	return c.Client.UpdateTrigger(c.Options.WorkspaceId, tagId, tag)
+func (c *ClientInWorkspace) UpdateTrigger(triggerId string, trigger *tagmanager.Trigger) (*tagmanager.Trigger, error) {
+	return c.Client.UpdateTrigger(c.Options.WorkspaceId, triggerId, trigger)
 }
 
-func (c *ClientInWorkspace) DeleteTrigger(tagId string) error {
-	return c.Client.DeleteTrigger(c.Options.WorkspaceId, tagId)
+func (c *ClientInWorkspace) DeleteTrigger(triggerId string) error {
+	return c.Client.DeleteTrigger(c.Options.WorkspaceId, triggerId)
 }

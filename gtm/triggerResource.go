@@ -119,7 +119,8 @@ func (r *triggerResource) Read(ctx context.Context, req resource.ReadRequest, re
 	}
 
 	overwriteTriggerResource(trigger, &state)
-	diags = req.State.Set(ctx, &state)
+
+	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

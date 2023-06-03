@@ -36,16 +36,18 @@ func (r *variableResource) Metadata(_ context.Context, req resource.MetadataRequ
 	resp.TypeName = req.ProviderTypeName + "_variable"
 }
 
+var variableResourceSchemaAttributes = map[string]schema.Attribute{
+	"name":      schema.StringAttribute{Required: true},
+	"type":      schema.StringAttribute{Required: true},
+	"id":        schema.StringAttribute{Computed: true},
+	"notes":     schema.StringAttribute{Optional: true},
+	"parameter": parameterSchema,
+}
+
 // Schema defines the schema for the resource.
 func (r *variableResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Attributes: map[string]schema.Attribute{
-			"name":      schema.StringAttribute{Required: true},
-			"type":      schema.StringAttribute{Required: true},
-			"id":        schema.StringAttribute{Computed: true},
-			"notes":     schema.StringAttribute{Optional: true},
-			"parameter": parameterSchema,
-		},
+		Attributes: variableResourceSchemaAttributes,
 	}
 }
 
@@ -57,12 +59,14 @@ type variableResourceModel struct {
 	Parameter []*ResourceParameterModel `tfsdk:"parameter"`
 }
 
-func overwriteVariableResource(variable *tagmanager.Variable, resource *variableResourceModel) {
-	resource.Name = types.StringValue(variable.Name)
-	resource.Type = types.StringValue(variable.Type)
-	resource.Id = types.StringValue(variable.VariableId)
-
-	resource.Parameter = wrapParameter(variable.Parameter)
+func wrapVariable(variable *tagmanager.Variable) *variableResourceModel {
+	return &variableResourceModel{
+		Name:      types.StringValue(variable.Name),
+		Type:      types.StringValue(variable.Type),
+		Id:        types.StringValue(variable.VariableId),
+		Notes:     types.StringValue(variable.Notes),
+		Parameter: wrapParameter(variable.Parameter),
+	}
 }
 
 func extractVariableParameter(resource variableResourceModel) []*tagmanager.Parameter {
@@ -77,7 +81,7 @@ func extractVariableParameter(resource variableResourceModel) []*tagmanager.Para
 	return parameter
 }
 
-func extractVariable(resource variableResourceModel) *tagmanager.Variable {
+func unwrapVariable(resource variableResourceModel) *tagmanager.Variable {
 	parameter := extractVariableParameter(resource)
 	return &tagmanager.Variable{
 		Name:       resource.Name.ValueString(),
@@ -97,15 +101,14 @@ func (r *variableResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
-	variable, err := r.client.CreateVariable(extractVariable(plan))
+	variable, err := r.client.CreateVariable(unwrapVariable(plan))
 
 	if err != nil {
 		resp.Diagnostics.AddError("Error Creating Variable", err.Error())
 		return
 	}
 
-	overwriteVariableResource(variable, &plan)
-	diags = resp.State.Set(ctx, plan)
+	diags = resp.State.Set(ctx, wrapVariable(variable))
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -130,8 +133,7 @@ func (r *variableResource) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
-	overwriteVariableResource(variable, &state)
-	diags = req.State.Set(ctx, &state)
+	diags = resp.State.Set(ctx, wrapVariable(variable))
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -152,14 +154,13 @@ func (r *variableResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	variable, err := r.client.UpdateVariable(state.Id.ValueString(), extractVariable(plan))
+	variable, err := r.client.UpdateVariable(state.Id.ValueString(), unwrapVariable(plan))
 	if err != nil {
 		resp.Diagnostics.AddError("Error Updating Variable", err.Error())
 		return
 	}
 
-	overwriteVariableResource(variable, &plan)
-	diags = resp.State.Set(ctx, plan)
+	diags = resp.State.Set(ctx, wrapVariable(variable))
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

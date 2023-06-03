@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"google.golang.org/api/googleapi"
 	"google.golang.org/api/option"
 	"google.golang.org/api/tagmanager/v2"
 )
@@ -62,14 +63,12 @@ func (c *Client) ListWorkspaces() ([]*tagmanager.Workspace, error) {
 func (c *Client) Workspace(id string) (*tagmanager.Workspace, error) {
 	c.beforeEachQuery()
 	ws, err := c.Accounts.Containers.Workspaces.Get(c.containerPath() + "/workspaces/" + id).Do()
-	if err != nil {
-		if _, err2 := c.ListWorkspaces(); err2 != nil {
-			return nil, err
-		} else {
-			return nil, ErrNotExist
-		}
+
+	if errTyped, ok := err.(*googleapi.Error); ok && errTyped.Code == 404 {
+		return nil, ErrNotExist
+	} else {
+		return ws, err
 	}
-	return ws, nil
 }
 
 func (c *Client) UpdateWorkspaces(id string, ws *tagmanager.Workspace) (*tagmanager.Workspace, error) {
@@ -104,14 +103,12 @@ func (c *Client) ListTags(workspaceId string) ([]*tagmanager.Tag, error) {
 func (c *Client) Tag(workspaceId string, tagId string) (*tagmanager.Tag, error) {
 	c.beforeEachQuery()
 	tag, err := c.Accounts.Containers.Workspaces.Tags.Get(c.workspacePath(workspaceId) + "/tags/" + tagId).Do()
-	if err != nil {
-		if _, err2 := c.ListTags(c.workspacePath(workspaceId)); err2 != nil {
-			return nil, err
-		} else {
-			return nil, ErrNotExist
-		}
+
+	if errTyped, ok := err.(*googleapi.Error); ok && errTyped.Code == 404 {
+		return nil, ErrNotExist
+	} else {
+		return tag, err
 	}
-	return tag, nil
 }
 
 func (c *Client) UpdateTag(workspaceId string, tagId string, tag *tagmanager.Tag) (*tagmanager.Tag, error) {
@@ -142,14 +139,12 @@ func (c *Client) ListVariables(workspaceId string) ([]*tagmanager.Variable, erro
 func (c *Client) Variable(workspaceId string, variableId string) (*tagmanager.Variable, error) {
 	c.beforeEachQuery()
 	variable, err := c.Accounts.Containers.Workspaces.Variables.Get(c.workspacePath(workspaceId) + "/variables/" + variableId).Do()
-	if err != nil {
-		if _, err2 := c.ListVariables(workspaceId); err2 != nil {
-			return nil, err
-		} else {
-			return nil, ErrNotExist
-		}
+
+	if errTyped, ok := err.(*googleapi.Error); ok && errTyped.Code == 404 {
+		return nil, ErrNotExist
+	} else {
+		return variable, err
 	}
-	return variable, nil
 }
 
 func (c *Client) UpdateVariable(workspaceId string, variableId string, variable *tagmanager.Variable) (*tagmanager.Variable, error) {
@@ -180,14 +175,12 @@ func (c *Client) ListTriggers(workspaceId string) ([]*tagmanager.Trigger, error)
 func (c *Client) Trigger(workspaceId string, triggerId string) (*tagmanager.Trigger, error) {
 	c.beforeEachQuery()
 	trigger, err := c.Accounts.Containers.Workspaces.Triggers.Get(c.workspacePath(workspaceId) + "/triggers/" + triggerId).Do()
-	if err != nil {
-		if _, err2 := c.ListTriggers(workspaceId); err2 != nil {
-			return nil, err
-		} else {
-			return nil, ErrNotExist
-		}
+
+	if errTyped, ok := err.(*googleapi.Error); ok && errTyped.Code == 404 {
+		return nil, ErrNotExist
+	} else {
+		return trigger, err
 	}
-	return trigger, nil
 }
 
 func (c *Client) UpdateTrigger(workspaceId string, triggerId string, trigger *tagmanager.Trigger) (*tagmanager.Trigger, error) {
