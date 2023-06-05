@@ -25,7 +25,7 @@ resource "gtm_variable_group" "test_variable_group" {
         {
           key   = "name"
           type  = "template"
-          value = "parameters.alph1a"
+          value = "parameters.alpha"
         }
       ]
     },
@@ -88,7 +88,7 @@ resource "gtm_tag_group" "test_tag_group" {
         {
           type  = "template",
           key   = "html",
-          value = "\u003cp\u003e this is custom html tag \u003c/p"
+          value = "\u003cp\u003e this is custom html tag\u003c/p"
         },
         {
           type  = "boolean",

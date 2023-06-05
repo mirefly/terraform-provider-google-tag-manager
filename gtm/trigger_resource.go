@@ -62,7 +62,7 @@ type resourceTriggerModel struct {
 func (m resourceTriggerModel) Equal(o resourceTriggerModel) bool {
 	if !m.Name.Equal(o.Name) ||
 		!m.Type.Equal(o.Type) ||
-		!m.Id.Equal(o.Id) ||
+		(!m.Id.IsUnknown() && !m.Id.Equal(o.Id)) ||
 		!m.Notes.Equal(o.Notes) {
 		return false
 	}

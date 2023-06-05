@@ -66,7 +66,7 @@ type resourceTagModel struct {
 func (m resourceTagModel) Equal(o resourceTagModel) bool {
 	if !m.Name.Equal(o.Name) ||
 		!m.Type.Equal(o.Type) ||
-		!m.Id.Equal(o.Id) ||
+		(!m.Id.IsUnknown() && !m.Id.Equal(o.Id)) ||
 		!m.Notes.Equal(o.Notes) ||
 		len(m.Parameter) != len(o.Parameter) ||
 		len(m.FiringTriggerId) != len(o.FiringTriggerId) {

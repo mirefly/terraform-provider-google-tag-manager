@@ -145,7 +145,7 @@ func (r *triggerGroupResource) Update(ctx context.Context, req resource.UpdateRe
 	// Delete all the triggers which doesn't exist in the new plan
 	for _, element := range state.Elements {
 		if _, ok := plan.Elements[element.Name.ValueString()]; !ok {
-			tflog.Warn(ctx, "Deleting Trigger: "+element.Name.ValueString())
+			tflog.Info(ctx, "Deleting Trigger: "+element.Name.ValueString())
 
 			err := r.client.DeleteTrigger(element.Id.ValueString())
 			if err != nil {
@@ -160,7 +160,7 @@ func (r *triggerGroupResource) Update(ctx context.Context, req resource.UpdateRe
 	// Create new triggers which doesn't exist in the state
 	for _, element := range plan.Elements {
 		if _, ok := state.Elements[element.Name.ValueString()]; !ok {
-			tflog.Warn(ctx, "Creating Trigger: "+element.Name.ValueString())
+			tflog.Info(ctx, "Creating Trigger: "+element.Name.ValueString())
 
 			trigger, err := r.client.CreateTrigger(toApiTrigger(element))
 			if err != nil {
@@ -175,7 +175,7 @@ func (r *triggerGroupResource) Update(ctx context.Context, req resource.UpdateRe
 	// Update trigger if not the same in plan and state
 	for _, stateEl := range state.Elements {
 		if planEl, ok := plan.Elements[stateEl.Name.ValueString()]; ok {
-			tflog.Warn(ctx, "Updating Trigger: "+stateEl.Name.ValueString())
+			tflog.Info(ctx, "Updating Trigger: "+stateEl.Name.ValueString())
 
 			if !planEl.Equal(stateEl) {
 				trigger, err := r.client.UpdateTrigger(stateEl.Id.ValueString(), toApiTrigger(planEl))

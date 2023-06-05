@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"google.golang.org/api/tagmanager/v2"
 )
 
@@ -144,6 +145,8 @@ func (r *variableGroupResource) Update(ctx context.Context, req resource.UpdateR
 	// Delete all the variables which doesn't exist in the new plan
 	for _, element := range state.Elements {
 		if _, ok := plan.Elements[element.Name.ValueString()]; !ok {
+			tflog.Info(ctx, "Deleting Variable: %s"+element.Name.ValueString())
+
 			err := r.client.DeleteVariable(element.Id.ValueString())
 			if err != nil {
 				resp.Diagnostics.AddError("Error Deleting Variable", err.Error())
@@ -157,6 +160,8 @@ func (r *variableGroupResource) Update(ctx context.Context, req resource.UpdateR
 	// Create new variables which doesn't exist in the state
 	for _, element := range plan.Elements {
 		if _, ok := state.Elements[element.Name.ValueString()]; !ok {
+			tflog.Info(ctx, "Creating Variable: %s"+element.Name.ValueString())
+
 			variable, err := r.client.CreateVariable(toApiVariable(element))
 			if err != nil {
 				resp.Diagnostics.AddError("Error Creating Variable", err.Error())
@@ -171,6 +176,8 @@ func (r *variableGroupResource) Update(ctx context.Context, req resource.UpdateR
 	for _, stateEl := range state.Elements {
 		if planEl, ok := plan.Elements[stateEl.Name.ValueString()]; ok {
 			if !planEl.Equal(stateEl) {
+				tflog.Info(ctx, "Updating Variable: "+planEl.Name.ValueString())
+
 				variable, err := r.client.UpdateVariable(stateEl.Id.ValueString(), toApiVariable(planEl))
 				if err != nil {
 					resp.Diagnostics.AddError("Error Updating Variable", err.Error())

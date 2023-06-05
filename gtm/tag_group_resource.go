@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"google.golang.org/api/tagmanager/v2"
 )
 
@@ -144,6 +145,8 @@ func (r *tagGroupResource) Update(ctx context.Context, req resource.UpdateReques
 	// Delete all the tags which doesn't exist in the new plan
 	for _, element := range state.Elements {
 		if _, ok := plan.Elements[element.Name.ValueString()]; !ok {
+			tflog.Info(ctx, "Deleting Tag: "+element.Name.ValueString())
+
 			err := r.client.DeleteTag(element.Id.ValueString())
 			if err != nil {
 				resp.Diagnostics.AddError("Error Deleting Tag", err.Error())
@@ -157,6 +160,8 @@ func (r *tagGroupResource) Update(ctx context.Context, req resource.UpdateReques
 	// Create new tags which doesn't exist in the state
 	for _, element := range plan.Elements {
 		if _, ok := state.Elements[element.Name.ValueString()]; !ok {
+			tflog.Info(ctx, "Creating Tag: "+element.Name.ValueString())
+
 			tag, err := r.client.CreateTag(toApiTag(element))
 			if err != nil {
 				resp.Diagnostics.AddError("Error Creating Tag", err.Error())
@@ -171,6 +176,8 @@ func (r *tagGroupResource) Update(ctx context.Context, req resource.UpdateReques
 	for _, stateEl := range state.Elements {
 		if planEl, ok := plan.Elements[stateEl.Name.ValueString()]; ok {
 			if !planEl.Equal(stateEl) {
+				tflog.Info(ctx, "Updating Tag: "+stateEl.Name.ValueString())
+
 				tag, err := r.client.UpdateTag(stateEl.Id.ValueString(), toApiTag(planEl))
 				if err != nil {
 					resp.Diagnostics.AddError("Error Updating Tag", err.Error())
