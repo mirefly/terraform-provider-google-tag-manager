@@ -36,7 +36,7 @@ func wrapParameterSchema(list schema.ListNestedAttribute) schema.ListNestedAttri
 func buildParameterSchema() schema.ListNestedAttribute {
 	var s = schema.ListNestedAttribute{Optional: true, NestedObject: schema.NestedAttributeObject{}}
 
-	for i := 0; i < 5; i++ {
+	for i := 0; i < 3; i++ {
 		s = wrapParameterSchema(s)
 	}
 
