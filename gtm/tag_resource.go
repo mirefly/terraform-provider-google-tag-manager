@@ -36,21 +36,21 @@ func (r *tagResource) Metadata(_ context.Context, req resource.MetadataRequest, 
 	resp.TypeName = req.ProviderTypeName + "_tag"
 }
 
+var tagResourceSchemaAttributes = map[string]schema.Attribute{
+	"name":      schema.StringAttribute{Required: true},
+	"type":      schema.StringAttribute{Required: true},
+	"id":        schema.StringAttribute{Computed: true},
+	"notes":     schema.StringAttribute{Optional: true},
+	"parameter": parameterSchema,
+	"firing_trigger_id": schema.ListAttribute{
+		Optional:    true,
+		ElementType: types.StringType,
+	},
+}
+
 // Schema defines the schema for the resource.
 func (r *tagResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		Attributes: map[string]schema.Attribute{
-			"name":      schema.StringAttribute{Required: true},
-			"type":      schema.StringAttribute{Required: true},
-			"id":        schema.StringAttribute{Computed: true},
-			"notes":     schema.StringAttribute{Optional: true},
-			"parameter": parameterSchema,
-			"firing_trigger_id": schema.ListAttribute{
-				Optional:    true,
-				ElementType: types.StringType,
-			},
-		},
-	}
+	resp.Schema = schema.Schema{Attributes: tagResourceSchemaAttributes}
 }
 
 type resourceTagModel struct {
@@ -62,8 +62,34 @@ type resourceTagModel struct {
 	FiringTriggerId []types.String           `tfsdk:"firing_trigger_id"`
 }
 
-func toResourceTag(tag *tagmanager.Tag) *resourceTagModel {
-	return &resourceTagModel{
+// Equal compares the two models and returns true if they are equal.
+func (m resourceTagModel) Equal(o resourceTagModel) bool {
+	if !m.Name.Equal(o.Name) ||
+		!m.Type.Equal(o.Type) ||
+		!m.Id.Equal(o.Id) ||
+		!m.Notes.Equal(o.Notes) ||
+		len(m.Parameter) != len(o.Parameter) ||
+		len(m.FiringTriggerId) != len(o.FiringTriggerId) {
+		return false
+	}
+
+	for i := range m.Parameter {
+		if !m.Parameter[i].Equal(o.Parameter[i]) {
+			return false
+		}
+	}
+
+	for i := range m.FiringTriggerId {
+		if !m.FiringTriggerId[i].Equal(o.FiringTriggerId[i]) {
+			return false
+		}
+	}
+
+	return true
+}
+
+func toResourceTag(tag *tagmanager.Tag) resourceTagModel {
+	return resourceTagModel{
 		Name:            types.StringValue(tag.Name),
 		Type:            types.StringValue(tag.Type),
 		Id:              types.StringValue(tag.TagId),

@@ -59,17 +59,18 @@ type resourceVariableModel struct {
 	Parameter []ResourceParameterModel `tfsdk:"parameter"`
 }
 
-func (r resourceVariableModel) Equal(o resourceVariableModel) bool {
-	if !r.Name.Equal(o.Name) ||
-		!r.Type.Equal(o.Type) ||
-		!r.Id.Equal(o.Id) ||
-		!r.Notes.Equal(o.Notes) ||
-		len(r.Parameter) != len(o.Parameter) {
+// Equal compares the two models and returns true if they are equal.
+func (m resourceVariableModel) Equal(o resourceVariableModel) bool {
+	if !m.Name.Equal(o.Name) ||
+		!m.Type.Equal(o.Type) ||
+		!m.Id.Equal(o.Id) ||
+		!m.Notes.Equal(o.Notes) ||
+		len(m.Parameter) != len(o.Parameter) {
 		return false
 	}
 
-	for i := range r.Parameter {
-		if !r.Parameter[i].Equal(o.Parameter[i]) {
+	for i := range m.Parameter {
+		if !m.Parameter[i].Equal(o.Parameter[i]) {
 			return false
 		}
 	}
