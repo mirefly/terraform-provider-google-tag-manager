@@ -140,6 +140,22 @@ type resourceConditionModel struct {
 	Parameter []ResourceParameterModel `tfsdk:"parameter"`
 }
 
+// Equal compares two resource conditions.
+func (r resourceConditionModel) Equal(o resourceConditionModel) bool {
+	if !r.Type.Equal(o.Type) ||
+		len(r.Parameter) != len(o.Parameter) {
+		return false
+	}
+
+	for _, p := range r.Parameter {
+		if !p.Equal(o.Parameter[0]) {
+			return false
+		}
+	}
+
+	return true
+}
+
 func toApiCondition(resourceCondition []resourceConditionModel) []*tagmanager.Condition {
 	condition := make([]*tagmanager.Condition, len(resourceCondition))
 

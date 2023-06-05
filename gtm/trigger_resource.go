@@ -36,17 +36,17 @@ func (r *triggerResource) Metadata(_ context.Context, req resource.MetadataReque
 	resp.TypeName = req.ProviderTypeName + "_trigger"
 }
 
+var triggerResourceSchemaAttributes = map[string]schema.Attribute{
+	"name":                schema.StringAttribute{Required: true},
+	"type":                schema.StringAttribute{Required: true},
+	"id":                  schema.StringAttribute{Computed: true},
+	"notes":               schema.StringAttribute{Optional: true},
+	"custom_event_filter": conditionSchema,
+}
+
 // Schema defines the schema for the resource.
 func (r *triggerResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		Attributes: map[string]schema.Attribute{
-			"name":                schema.StringAttribute{Required: true},
-			"type":                schema.StringAttribute{Required: true},
-			"id":                  schema.StringAttribute{Computed: true},
-			"notes":               schema.StringAttribute{Optional: true},
-			"custom_event_filter": conditionSchema,
-		},
-	}
+	resp.Schema = schema.Schema{Attributes: triggerResourceSchemaAttributes}
 }
 
 type resourceTriggerModel struct {
@@ -57,8 +57,31 @@ type resourceTriggerModel struct {
 	CustomEventFilter []resourceConditionModel `tfsdk:"custom_event_filter"`
 }
 
-func toResourceTrigger(trigger *tagmanager.Trigger) *resourceTriggerModel {
-	return &resourceTriggerModel{
+// Equal compares the trigger resource model with the given resource model
+
+func (m resourceTriggerModel) Equal(o resourceTriggerModel) bool {
+	if !m.Name.Equal(o.Name) ||
+		!m.Type.Equal(o.Type) ||
+		!m.Id.Equal(o.Id) ||
+		!m.Notes.Equal(o.Notes) {
+		return false
+	}
+
+	if len(m.CustomEventFilter) != len(o.CustomEventFilter) {
+		return false
+	}
+
+	for i := range m.CustomEventFilter {
+		if !m.CustomEventFilter[i].Equal(o.CustomEventFilter[i]) {
+			return false
+		}
+	}
+
+	return true
+}
+
+func toResourceTrigger(trigger *tagmanager.Trigger) resourceTriggerModel {
+	return resourceTriggerModel{
 		Name:              types.StringValue(trigger.Name),
 		Type:              types.StringValue(trigger.Type),
 		Id:                types.StringValue(trigger.TriggerId),

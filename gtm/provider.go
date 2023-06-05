@@ -102,5 +102,6 @@ func (p *gtmProvider) Resources(_ context.Context) []func() resource.Resource {
 		NewTriggerResource,
 		NewVariableGroupResource,
 		NewTagGroupResource,
+		NewTriggerGroupResource,
 	}
 }

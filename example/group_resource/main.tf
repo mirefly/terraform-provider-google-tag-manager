@@ -99,3 +99,52 @@ resource "gtm_tag_group" "test_tag_group" {
     }
   }
 }
+
+resource "gtm_trigger_group" "test_trigger_group" {
+  elements = {
+    "trigger 1 in group" : {
+      name = "trigger 1 in group"
+      type = "customEvent"
+      custom_event_filter = [
+        {
+          type = "equals",
+          parameter = [
+            {
+              type  = "template",
+              key   = "arg0",
+              value = "{{_event}}"
+            },
+            {
+              type  = "template",
+              key   = "arg1",
+              value = "event-name-1"
+            }
+          ]
+        }
+      ]
+
+    },
+    "trigger 2 in group" : {
+      name = "trigger 2 in group"
+      type = "customEvent"
+      custom_event_filter = [
+        {
+          type = "equals",
+          parameter = [
+            {
+              type  = "template",
+              key   = "arg0",
+              value = "{{_event}}"
+            },
+            {
+              type  = "template",
+              key   = "arg1",
+              value = "event-name-2"
+            }
+          ]
+        }
+      ]
+
+    }
+  }
+}
