@@ -141,14 +141,14 @@ type resourceConditionModel struct {
 }
 
 // Equal compares two resource conditions.
-func (r resourceConditionModel) Equal(o resourceConditionModel) bool {
-	if !r.Type.Equal(o.Type) ||
-		len(r.Parameter) != len(o.Parameter) {
+func (m resourceConditionModel) Equal(o resourceConditionModel) bool {
+	if !m.Type.Equal(o.Type) ||
+		len(m.Parameter) != len(o.Parameter) {
 		return false
 	}
 
-	for _, p := range r.Parameter {
-		if !p.Equal(o.Parameter[0]) {
+	for i, p := range m.Parameter {
+		if !p.Equal(o.Parameter[i]) {
 			return false
 		}
 	}

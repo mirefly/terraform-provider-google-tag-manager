@@ -175,9 +175,9 @@ func (r *triggerGroupResource) Update(ctx context.Context, req resource.UpdateRe
 	// Update trigger if not the same in plan and state
 	for _, stateEl := range state.Elements {
 		if planEl, ok := plan.Elements[stateEl.Name.ValueString()]; ok {
-			tflog.Info(ctx, "Updating Trigger: "+stateEl.Name.ValueString())
-
 			if !planEl.Equal(stateEl) {
+				tflog.Info(ctx, "Updating Trigger: "+stateEl.Name.ValueString())
+
 				trigger, err := r.client.UpdateTrigger(stateEl.Id.ValueString(), toApiTrigger(planEl))
 				if err != nil {
 					resp.Diagnostics.AddError("Error Updating Trigger", err.Error())
