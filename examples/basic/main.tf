@@ -2,7 +2,7 @@ terraform {
   required_providers {
     gtm = {
       source  = "mirefly/google-tag-manager"
-      version = "0.0.1"
+      version = ">= 0.0.8"
     }
   }
 }
