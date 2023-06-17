@@ -12,7 +12,9 @@ var conditionSchema = schema.ListNestedAttribute{
 	Optional: true,
 	NestedObject: schema.NestedAttributeObject{
 		Attributes: map[string]schema.Attribute{
-			"type":      schema.StringAttribute{Required: true},
+			"type": schema.StringAttribute{
+				Description: "Condition type.",
+				Required:    true},
 			"parameter": parameterSchema,
 		},
 	},
@@ -23,18 +25,26 @@ func wrapParameterSchema(list schema.ListNestedAttribute) schema.ListNestedAttri
 		Optional: true,
 		NestedObject: schema.NestedAttributeObject{
 			Attributes: map[string]schema.Attribute{
-				"key":   schema.StringAttribute{Optional: true},
-				"type":  schema.StringAttribute{Required: true},
-				"value": schema.StringAttribute{Optional: true},
-				"list":  list,
-				"map":   list,
+				"key": schema.StringAttribute{
+					Description: "Parameter key.",
+					Optional:    true},
+				"type": schema.StringAttribute{
+					Description: "Parameter type.",
+					Required:    true},
+				"value": schema.StringAttribute{
+					Description: "Parameter value.",
+					Optional:    true},
+				"list": list,
+				"map":  list,
 			},
 		},
 	}
 }
 
 func buildParameterSchema() schema.ListNestedAttribute {
-	var s = schema.ListNestedAttribute{Optional: true, NestedObject: schema.NestedAttributeObject{}}
+	var s = schema.ListNestedAttribute{
+		Description: "Parameters.",
+		Optional:    true, NestedObject: schema.NestedAttributeObject{}}
 
 	for i := 0; i < 3; i++ {
 		s = wrapParameterSchema(s)

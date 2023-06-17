@@ -37,12 +37,21 @@ func (r *tagResource) Metadata(_ context.Context, req resource.MetadataRequest, 
 }
 
 var tagResourceSchemaAttributes = map[string]schema.Attribute{
-	"name":      schema.StringAttribute{Required: true},
-	"type":      schema.StringAttribute{Required: true},
-	"id":        schema.StringAttribute{Computed: true},
-	"notes":     schema.StringAttribute{Optional: true},
+	"name": schema.StringAttribute{
+		Description: "The name of the tag.",
+		Required:    true},
+	"type": schema.StringAttribute{
+		Description: "The type of the tag.",
+		Required:    true},
+	"id": schema.StringAttribute{
+		Description: "The ID of the tag.",
+		Computed:    true},
+	"notes": schema.StringAttribute{
+		Description: "The notes associated with the tag.",
+		Optional:    true},
 	"parameter": parameterSchema,
 	"firing_trigger_id": schema.ListAttribute{
+		Description: "The ID of the firing triggers associated with the tag.",
 		Optional:    true,
 		ElementType: types.StringType,
 	},

@@ -35,11 +35,21 @@ func (p *gtmProvider) Metadata(_ context.Context, _ provider.MetadataRequest, re
 func (p *gtmProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"credential_file":            schema.StringAttribute{Required: true},
-			"account_id":                 schema.StringAttribute{Required: true},
-			"container_id":               schema.StringAttribute{Required: true},
-			"workspace_name":             schema.StringAttribute{Required: true},
-			"max_api_queries_per_minute": schema.Int64Attribute{Optional: true},
+			"credential_file": schema.StringAttribute{
+				Description: "Path to the credential file.",
+				Required:    true},
+			"account_id": schema.StringAttribute{
+				Description: "GTM Account ID.",
+				Required:    true},
+			"container_id": schema.StringAttribute{
+				Description: "GTM Container ID.",
+				Required:    true},
+			"workspace_name": schema.StringAttribute{
+				Description: "Workspace name.",
+				Required:    true},
+			"max_api_queries_per_minute": schema.Int64Attribute{
+				Description: "Maximum number of API queries per minute.",
+				Optional:    true},
 		},
 	}
 }

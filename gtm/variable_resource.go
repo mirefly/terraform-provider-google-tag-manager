@@ -37,10 +37,22 @@ func (r *variableResource) Metadata(_ context.Context, req resource.MetadataRequ
 }
 
 var variableResourceSchemaAttributes = map[string]schema.Attribute{
-	"name":      schema.StringAttribute{Required: true},
-	"type":      schema.StringAttribute{Required: true},
-	"id":        schema.StringAttribute{Computed: true},
-	"notes":     schema.StringAttribute{Optional: true},
+	"name": schema.StringAttribute{
+		Description: "The name of the variable.",
+		Required:    true,
+	},
+	"type": schema.StringAttribute{
+		Description: "The type of the variable.",
+		Required:    true,
+	},
+	"id": schema.StringAttribute{
+		Description: "The ID of the variable.",
+		Computed:    true,
+	},
+	"notes": schema.StringAttribute{
+		Description: "The notes of the variable.",
+		Optional:    true,
+	},
 	"parameter": parameterSchema,
 }
 

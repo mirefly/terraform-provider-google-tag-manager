@@ -41,13 +41,16 @@ func (r *workspaceResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"name": schema.StringAttribute{
-				Required: true,
+				Description: "The name of the workspace.",
+				Required:    true,
 			},
 			"description": schema.StringAttribute{
-				Optional: true,
+				Description: "The description of the workspace.",
+				Optional:    true,
 			},
 			"id": schema.StringAttribute{
-				Computed: true,
+				Description: "The ID of the workspace.",
+				Computed:    true,
 			},
 		},
 	}

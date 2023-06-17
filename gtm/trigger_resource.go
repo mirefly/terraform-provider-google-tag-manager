@@ -37,10 +37,22 @@ func (r *triggerResource) Metadata(_ context.Context, req resource.MetadataReque
 }
 
 var triggerResourceSchemaAttributes = map[string]schema.Attribute{
-	"name":                schema.StringAttribute{Required: true},
-	"type":                schema.StringAttribute{Required: true},
-	"id":                  schema.StringAttribute{Computed: true},
-	"notes":               schema.StringAttribute{Optional: true},
+	"name": schema.StringAttribute{
+		Description: "The name of the trigger.",
+		Required:    true,
+	},
+	"type": schema.StringAttribute{
+		Description: "The type of the trigger.",
+		Required:    true,
+	},
+	"id": schema.StringAttribute{
+		Description: "The ID of the trigger.",
+		Computed:    true,
+	},
+	"notes": schema.StringAttribute{
+		Description: "The notes of the trigger.",
+		Optional:    true,
+	},
 	"custom_event_filter": conditionSchema,
 }
 
