@@ -1,4 +1,4 @@
-package gtm
+package provider
 
 import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"

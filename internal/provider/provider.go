@@ -1,8 +1,8 @@
-package gtm
+package provider
 
 import (
 	"context"
-	"terraform-provider-google-tag-manager/gtm/api"
+	"terraform-provider-google-tag-manager/internal/api"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
